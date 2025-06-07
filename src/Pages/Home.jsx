@@ -41,16 +41,16 @@ function Home() {
     },
   ]);
 
-    /**
-     * 個人資料資料物件，包含 GitHub 個人資料資訊
-     * @type {Object}
-     * @property {string} avatar - 個人資料頭像圖片路徑
-     * @property {string} name - 個人資料顯示名稱
-     * @property {string} description - 個人資料描述文字
-     * @property {string} followers - 追蹤者數量（字串格式）
-     * @property {string} following - 追蹤中數量（字串格式）
-     * @property {string} location - 個人資料地理位置
-     */
+  /**
+   * 個人資料資料物件，包含 GitHub 個人資料資訊
+   * @type {Object}
+   * @property {string} avatar - 個人資料頭像圖片路徑
+   * @property {string} name - 個人資料顯示名稱
+   * @property {string} description - 個人資料描述文字
+   * @property {string} followers - 追蹤者數量（字串格式）
+   * @property {string} following - 追蹤中數量（字串格式）
+   * @property {string} location - 個人資料地理位置
+   */
   const [profileData] = useState({
     avatar: "/skill-icons--github-dark.svg",
     name: "GitHub",
@@ -64,7 +64,7 @@ function Home() {
    * 包含儲存庫物件陣列的狀態變數，每個物件包含其元資料。
    * 每個儲存庫物件包含如 id、名稱、描述、程式語言、星星數量、
    * 分支數量、授權條款和最後更新時間等資訊。
-   * 
+   *
    * @type {Array<Object>} repositories - 儲存庫物件陣列
    * @property {number} repositories[].id - 儲存庫的唯一識別碼
    * @property {string} repositories[].name - 儲存庫名稱
@@ -117,14 +117,16 @@ function Home() {
       updated: "4 days ago",
     },
   ]);
-  
+
   /**
    * 渲染搜尋區塊組件
    * @returns {JSX.Element} 包含搜尋輸入欄位和結果清單的搜尋容器
    */
   const renderSearchSection = () => (
     <SearchContainer>
-      <div style={{ position: "relative" }}>        <SearchIcon>
+      <div style={{ position: "relative" }}>
+        {" "}
+        <SearchIcon>
           <img src="src/images/Search.svg" alt="Search Icon" />
         </SearchIcon>
         <SearchInput
@@ -147,7 +149,7 @@ function Home() {
       </SearchResults>
     </SearchContainer>
   );
-    
+
   /**
    * 渲染個人資料區塊組件
    * @returns {JSX.Element} 包含用戶頭像、統計資料、姓名和描述的個人資料區塊
@@ -171,7 +173,7 @@ function Home() {
           </StatItem>
         </ProfileStats>
       </ProfileHeader>
-      <div style={{ textAlign: 'center' }}>
+      <div style={{ textAlign: "center" }}>
         <ProfileName>{profileData.name}</ProfileName>
         <ProfileDescription>{profileData.description}</ProfileDescription>
       </div>
@@ -203,11 +205,12 @@ function Home() {
   );
 
   return (
-    <>      <Header>
+    <>
+      {" "}
+      <Header>
         <Image src="src/images/hero-image-github-profile.jpg" />
         {renderSearchSection()}
       </Header>
-
       {renderProfileSection()}
       {renderRepositoriesSection()}
     </>
