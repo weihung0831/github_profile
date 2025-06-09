@@ -204,6 +204,10 @@ export const RepoName = styled.h3`
   &:hover {
     text-decoration: underline;
   }
+
+  & a {
+    color: inherit;
+  }
 `;
 
 export const RepoDescription = styled.p`
@@ -245,4 +249,12 @@ export const ViewAllButton = styled.button`
   &:hover {
     background-color: rgba(255, 255, 255, 0.1);
   }
+`;
+
+export const NoSearchResults = styled.div`
+  text-align: center;
+  margin: 50px auto;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 600px;
 `;

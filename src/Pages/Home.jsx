@@ -28,95 +28,95 @@ import {
   RepoStats,
   RepoStat,
   ViewAllButton,
+  NoSearchResults
 } from "../Styles/AppStyle";
+import axios from "axios";
 
 function Home() {
-  const [query, setQuery] = useState("username");
-  const [results] = useState([
-    {
-      id: 1,
-      icon: "/skill-icons--github-dark.svg",
-      title: "GitHub",
-      subtitle: "How people build software.",
-    },
-  ]);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
+  const [profileData, setProfileData] = useState(null);
+  const [hasSearched, setHasSearched] = useState(false);
+  const avatar = "/skill-icons--github-dark.svg";
+  const [repositories, setRepositories] = useState([]);
 
-  /**
-   * 個人資料資料物件，包含 GitHub 個人資料資訊
-   * @type {Object}
-   * @property {string} avatar - 個人資料頭像圖片路徑
-   * @property {string} name - 個人資料顯示名稱
-   * @property {string} description - 個人資料描述文字
-   * @property {string} followers - 追蹤者數量（字串格式）
-   * @property {string} following - 追蹤中數量（字串格式）
-   * @property {string} location - 個人資料地理位置
-   */
-  const [profileData] = useState({
-    avatar: "/skill-icons--github-dark.svg",
-    name: "GitHub",
-    description: "How people build software.",
-    followers: "27839",
-    following: "0",
-    location: "San Francisco, CA",
-  });
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      fetchGithubData(query);
+      fetchRepositories(query);
+    }
+  };
 
-  /**
-   * 包含儲存庫物件陣列的狀態變數，每個物件包含其元資料。
-   * 每個儲存庫物件包含如 id、名稱、描述、程式語言、星星數量、
-   * 分支數量、授權條款和最後更新時間等資訊。
-   *
-   * @type {Array<Object>} repositories - 儲存庫物件陣列
-   * @property {number} repositories[].id - 儲存庫的唯一識別碼
-   * @property {string} repositories[].name - 儲存庫名稱
-   * @property {string} repositories[].description - 儲存庫簡要描述
-   * @property {string} [repositories[].license] - 授權條款類型（選填）
-   * @property {string} repositories[].language - 主要程式語言
-   * @property {number} repositories[].stars - 儲存庫獲得的星星數量
-   * @property {number} repositories[].forks - 儲存庫被分支的次數
-   * @property {string} repositories[].updated - 距離最後更新的時間（人類可讀格式）
-   */
-  const [repositories] = useState([
-    {
-      id: 1,
-      name: ".github",
-      description: "Community health files for the @GitHub organization",
-      language: "JavaScript",
-      stars: 703,
-      forks: 2369,
-      updated: "4 days ago",
-    },
-    {
-      id: 2,
-      name: "accessibility-alt-text-bot",
-      description:
-        "An action to remind users to add alt text on Issues, Pull Requests, and Discussions",
-      license: "MIT",
-      language: "JavaScript",
-      stars: 50,
-      forks: 7,
-      updated: "3 days ago",
-    },
-    {
-      id: 3,
-      name: "accessibilityjs",
-      description: "Client side accessibility error scanner.",
-      license: "MIT",
-      language: "JavaScript",
-      stars: 2181,
-      forks: 72,
-      updated: "4 days ago",
-    },
-    {
-      id: 4,
-      name: "actions-cheat-sheet",
-      description: "A cheat sheet for GitHub Actions",
-      license: "MIT",
-      language: "JavaScript",
-      stars: 194,
-      forks: 26,
-      updated: "4 days ago",
-    },
-  ]);
+  const fetchGithubData = async (username) => {
+    try {
+      setHasSearched(true);
+      const res = await axios.get(`https://api.github.com/users/${username}`);
+
+      setResults([
+        {
+          id: res.data.id,
+          icon: avatar,
+          title: res.data.name,
+          subtitle: res.data.bio,
+        },
+      ]);
+
+      setProfileData({
+        avatar: avatar,
+        name: res.data.name,
+        description: res.data.bio,
+        followers: res.data.followers.toString(),
+        following: res.data.following.toString(),
+        location: res.data.location,
+        login: res.data.login,
+      });
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        setResults([]);
+        setProfileData(null);
+      }
+    }
+  };
+
+  const fetchRepositories = async (username) => {
+    try {
+      const res = await axios.get(`https://api.github.com/users/${username}/repos`);
+      const repos = res.data.map(repo => {
+        const updatedDate = new Date(repo.updated_at);
+        const now = new Date();
+        const diffTime = Math.abs(now - updatedDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        let updatedText;
+        if (diffDays < 30) {
+          updatedText = `${diffDays} days ago`;
+        } else {
+          const diffMonths = Math.floor(diffDays / 30);
+          updatedText = `${diffMonths} months ago`;
+        }
+
+        return {
+          id: repo.id,
+          name: repo.name,
+          description: repo.description,
+          license: repo.license,
+          language: repo.language,
+          stars: repo.stargazers_count,
+          forks: repo.forks_count,
+          updated: updatedText,
+          url: repo.html_url,
+        };
+      });
+      setRepositories(repos);
+    } catch (error) {
+      console.error("Error fetching repositories:", error);
+      setRepositories([]);
+    }
+  };
+
+  const linkUrl = () => {
+    window.open("https://github.com/" + query);
+  }
 
   /**
    * 渲染搜尋區塊組件
@@ -134,9 +134,10 @@ function Home() {
           placeholder="username"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={handleKeyDown}
         />
       </div>
-      <SearchResults>
+      <SearchResults onClick={linkUrl}>
         {results.map((item) => (
           <SearchItem key={item.id}>
             <ItemIcon src={item.icon} alt={item.title} />
@@ -187,32 +188,48 @@ function Home() {
   const renderRepositoriesSection = () => (
     <RepositoriesSection>
       <RepositoryGrid>
-        {repositories.map((repo) => (
+        {repositories.slice(0, 6).map((repo) => (
           <RepositoryCard key={repo.id}>
-            <RepoName>{repo.name}</RepoName>
+            <a href={repo.url}><RepoName>{repo.name}</RepoName></a>
             <RepoDescription>{repo.description}</RepoDescription>
             <RepoStats>
               {repo.license && <RepoStat>🏷️ {repo.license}</RepoStat>}
               <RepoStat>⭐ {repo.stars}</RepoStat>
               <RepoStat>🔧 {repo.forks}</RepoStat>
+              <RepoStat>🗓️ {repo.language}</RepoStat>
               <RepoStat>updated {repo.updated}</RepoStat>
             </RepoStats>
           </RepositoryCard>
         ))}
       </RepositoryGrid>
-      <ViewAllButton>View all repositories</ViewAllButton>
+      {repositories.length > 4 && (
+        <ViewAllButton onClick={() => window.open(`https://github.com/${profileData.login}?tab=repositories`)}>
+          View all repositories
+        </ViewAllButton>
+      )}
     </RepositoriesSection>
   );
 
   return (
     <>
-      {" "}
       <Header>
         <Image src="src/images/hero-image-github-profile.jpg" />
         {renderSearchSection()}
       </Header>
-      {renderProfileSection()}
-      {renderRepositoriesSection()}
+
+      {/* 只有當 profileData 不為 null 時才顯示個人資料區塊 */}
+      {profileData && renderProfileSection()}
+
+      {/* 只有當 profileData 不為 null 時才顯示儲存庫區塊 */}
+      {profileData && renderRepositoriesSection()}
+
+      {/* 當已搜尋但沒有結果時顯示提示訊息 */}
+      {hasSearched && !profileData && (
+        <NoSearchResults>
+          <h3>請輸入有效的 GitHub 用戶名稱</h3>
+          <p>使用上方搜尋欄位輸入 GitHub 用戶名稱並按下 Enter 鍵進行查詢。</p>
+        </NoSearchResults>
+      )}
     </>
   );
 }
